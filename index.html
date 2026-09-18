@@ -310,6 +310,9 @@
             } else if (currentNav === 's_cal') {
                 const mData = sortMaster(db.filter(x => x.date.startsWith(mPrefix) && Number(x.amount) !== 0));
                 const total = mData.reduce((a,b)=>a+Number(b.amount), 0);
+                const yearPrefix = `${calContext.getFullYear()}-`;
+                const yData = db.filter(x => x.date.startsWith(yearPrefix) && Number(x.amount) !== 0);
+                const yearTotal = yData.reduce((a,b) => a + Number(b.amount), 0);
                 const bySupp = mData.reduce((acc, c) => { const n = cleanText(c.supplier, '기타'); if(!acc[n]) acc[n] = { amount: 0, count: 0 }; acc[n].amount += Number(c.amount); acc[n].count += 1; return acc; }, {});
                 let running = 0;
                 root.innerHTML = `
@@ -321,6 +324,10 @@
                                 <button onclick="moveMonth(1)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-sub active:scale-90 transition-transform cursor-pointer" aria-label="다음 달"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
                             </div>
                             <h2 class="text-3xl font-black ${total < 0 ? 'text-red-400' : ''}" style="${total >= 0 ? 'color: var(--brand-color)' : ''}">${formatKRW(total)}원</h2>
+                            <div class="flex items-center justify-between mt-3 px-4 py-3 rounded-2xl bg-sub border border-custom">
+                                <span class="text-[13px] font-bold text-dim">${calContext.getFullYear()}년 연매출</span>
+                                <b class="text-[18px] font-black ${yearTotal < 0 ? 'text-red-400' : 'text-important'}">${formatKRW(yearTotal)}원</b>
+                            </div>
                             <p class="text-[13px] font-bold uppercase tracking-widest mt-1 text-dim">${mPrefix} 통계 / ${mData.length}건의 기록</p>
                         </div>
                         <div class="px-5 pt-8">
