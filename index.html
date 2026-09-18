@@ -182,6 +182,17 @@
         
         window.navTo = (nav) => { currentNav = nav; selectedDate = null; searchTerm = ""; filterMonth = null; render(); window.scrollTo(0,0); };
         window.moveMonth = (v) => { calContext = new Date(calContext.getFullYear(), calContext.getMonth() + v, 1); selectedDate = null; render(); };
+        window.searchCalendarMonth = (value) => {
+            const raw = String(value || '').trim().replace(/년|월/g, '.').replace(/[-\/\s]+/g, '.');
+            const parts = raw.split('.').filter(Boolean);
+            let year, month;
+            if (parts.length >= 2) { year = parseInt(parts[0], 10); month = parseInt(parts[1], 10); }
+            else if (/^\d{6}$/.test(raw)) { year = parseInt(raw.slice(0,4),10); month = parseInt(raw.slice(4),10); }
+            if (!Number.isInteger(year) || year < 1900 || year > 2100 || !Number.isInteger(month) || month < 1 || month > 12) { showToast('연도와 달을 입력해 주세요. 예: 2026.9'); return; }
+            calContext = new Date(year, month - 1, 1); selectedDate = null; render();
+        };
+        window.handleMonthSearchKey = (e) => { if (e.key === 'Enter') window.searchCalendarMonth(e.target.value); };
+
         window.goToToday = () => { const today = getLocalToday(); calContext = new Date(); selectedDate = today; currentNav = 'e_cal'; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); openDailyModal(today); };
         window.openSettings = () => { currentNav = 'settings'; render(); };
         window.handleDateTouch = (dateStr) => { selectedDate = dateStr; render(); openDailyModal(dateStr); };
@@ -298,6 +309,7 @@
                                 <h2 class="text-3xl font-black text-important">${y}.${m+1}</h2>
                                 <span class="text-lg font-medium italic text-dim opacity-60 tracking-wide" style="font-family: Georgia, serif;">${monthNamesEn[m]}</span>
                             </div>
+                            <div class="flex gap-2 mt-3"><input type="text" inputmode="numeric" placeholder="년.월 검색  예: 2026.9" class="input-field !py-2.5 text-[14px]" onkeydown="window.handleMonthSearchKey(event)"><button onclick="window.searchCalendarMonth(this.previousElementSibling.value)" class="px-4 rounded-xl bg-sub border border-custom font-bold text-[13px] cursor-pointer">검색</button></div>
                             <div class="grid grid-cols-7 text-center text-[12px] font-extrabold text-dim mt-4"><div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div></div>
                         </div>
                         <div class="calendar-grid">${gridHtml}</div>
@@ -320,7 +332,8 @@
                         <div class="sticky-sub px-5 py-5 border-b border-custom shadow-sm bg-primary">
                             <div class="flex items-center justify-between mb-3">
                                 <button onclick="moveMonth(-1)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-sub active:scale-90 transition-transform cursor-pointer" aria-label="이전 달"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-                                <div class="text-center"><div class="text-xl font-black text-important">${calContext.getFullYear()}.${calContext.getMonth()+1}</div><div class="text-lg font-medium italic text-dim opacity-60 tracking-wide" style="font-family: Georgia, serif;">${monthNamesEn[calContext.getMonth()]}</div></div>
+                                <div class="text-center"><div class="text-xl font-black text-important">${calContext.getFullYear()}.${calContext.getMonth()+1}</div><div class="text-lg font-medium italic text-dim opacity-60 tracking-wide" style="font-family: Georgia, serif;">${monthNamesEn[calContext.getMonth()]}</div>
+                            <div class="flex gap-2 mb-3"><input type="text" inputmode="numeric" placeholder="년.월 검색  예: 2026.9" class="input-field !py-2.5 text-[14px]" onkeydown="window.handleMonthSearchKey(event)"><button onclick="window.searchCalendarMonth(this.previousElementSibling.value)" class="px-4 rounded-xl bg-sub border border-custom font-bold text-[13px] cursor-pointer">검색</button></div></div>
                                 <button onclick="moveMonth(1)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-sub active:scale-90 transition-transform cursor-pointer" aria-label="다음 달"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
                             </div>
                             <h2 class="text-3xl font-black ${total < 0 ? 'text-red-400' : ''}" style="${total >= 0 ? 'color: var(--brand-color)' : ''}">${formatKRW(total)}원</h2>
