@@ -602,7 +602,7 @@
                         }
 
                         const noteParts = [];
-                        if (category) noteParts.push('[' + category + ']');
+                        // 간단달력 내부 분류값(category)은 사용자 메모가 아니므로 가져오지 않음.
                         if (timePlace) noteParts.push(timePlace);
                         if (memo) noteParts.push(memo);
                         const note = noteParts.join(' ').replace(/\s+/g, ' ').trim();
