@@ -560,88 +560,81 @@
             const input = document.getElementById('import-input').value;
             const previewDiv = document.getElementById('import-preview');
             const btnsDiv = document.getElementById('import-btns');
-            
             if(!input.trim()) { previewDiv.innerHTML = '<p class="text-red-500 p-2 text-center text-[15px] font-bold">내용이 비어있습니다.</p>'; btnsDiv.classList.add('hidden'); return; }
-            
+
             tempItems = [];
-            const lines = input.split('\n').map(l => l.trim());
-            let currentItem = null;
-            const currentYear = new Date().getFullYear();
+            const cleanField = v => (!v || v === 'BLACK_NULL') ? '' : String(v).trim();
+            const makeId = (date, idx) => 'ci_' + date.replace(/-/g,'') + '_' + idx + '_' + Date.now();
 
-            for (let line of lines) {
-                if (!line) continue;
-                if (/^\d{2}:\d{2}:\d{2},\d{3}/.test(line)) continue;
-                if (/^\d+$/.test(line)) continue;
-                
-                let dMatchFull = line.match(/(20\d{2}|\d{2})[\s\-\.\/\_년]+(\d{1,2})[\s\-\.\/\_월]+(\d{1,2})[일\s]*/);
-                let dMatchFlat = line.match(/(?:^|\D)(20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?:$|\D)/);
-                let dMatchShort = line.match(/(?:^|\[|\s|<|>|-)(\d{1,2})[\s\-\.\/\_월]+(\d{1,2})[일\s]*(?:$|\]|\s|<|>|-)/);
+            // 간단달력(CALENDAR_CIFALSE) 전용 백업 형식:
+            // 날짜 묶음은 <><YYYY_M_D>>> 로 시작하고, 같은 날 여러 일정은 탭으로 구분됨.
+            if (input.includes('CALENDAR_CIFALSE') && input.includes('>>>')) {
+                const groups = input.split('<><').filter(x => /^\d{4}_\d{1,2}_\d{1,2}>>>/.test(x));
+                let seq = 0;
+                for (const group of groups) {
+                    const sep = group.indexOf('>>>');
+                    if (sep < 0) continue;
+                    const key = group.slice(0, sep).trim();
+                    const dm = key.match(/^(\d{4})_(\d{1,2})_(\d{1,2})$/);
+                    if (!dm) continue;
+                    const date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
+                    const records = group.slice(sep + 3).split(/\t+/).map(x => x.trim()).filter(Boolean);
 
-                let dateFound = null;
-                let matchedStr = '';
+                    for (const record of records) {
+                        const fields = record.split(';:').map(cleanField);
+                        if (fields.length < 6 || fields[2] !== 'KIND_MEMO') continue;
 
-                if (dMatchFull) {
-                    let y = dMatchFull[1].length === 2 ? '20' + dMatchFull[1] : dMatchFull[1];
-                    dateFound = `${y}-${String(dMatchFull[2]).padStart(2,'0')}-${String(dMatchFull[3]).padStart(2,'0')}`;
-                    matchedStr = dMatchFull[0];
-                } else if (dMatchFlat) {
-                    dateFound = `${dMatchFlat[1]}-${dMatchFlat[2]}-${dMatchFlat[3]}`;
-                    matchedStr = dMatchFlat[0];
-                } else if (dMatchShort) {
-                    if(line.includes('월') || line.includes('.') || line.includes('/')){
-                         dateFound = `${currentYear}-${String(dMatchShort[1]).padStart(2,'0')}-${String(dMatchShort[2]).padStart(2,'0')}`;
-                         matchedStr = dMatchShort[0];
+                        const category = fields[3];
+                        let timePlace = fields[4];
+                        const memo = fields[5];
+                        let time = '';
+                        const tm = timePlace.match(/(?:^|\s)(\d{1,2})시(?:\s*(\d{1,2})분)?/);
+                        if (tm) {
+                            time = `${String(Math.min(23, parseInt(tm[1],10))).padStart(2,'0')}:${String(Math.min(59, parseInt(tm[2] || '0',10))).padStart(2,'0')}`;
+                            timePlace = timePlace.replace(tm[0], ' ').trim();
+                        }
+
+                        const noteParts = [];
+                        if (category) noteParts.push('[' + category + ']');
+                        if (timePlace) noteParts.push(timePlace);
+                        if (memo) noteParts.push(memo);
+                        const note = noteParts.join(' ').replace(/\s+/g, ' ').trim();
+                        if (!note) continue;
+
+                        tempItems.push({
+                            id: makeId(date, seq++),
+                            date, time, note, amount: 0,
+                            supplier: '', people: '', departure: '', arrival: ''
+                        });
                     }
                 }
-
-                if (dateFound) {
-                    if (currentItem && currentItem.note.trim()) tempItems.push(currentItem);
-                    
-                    let cleanNote = line.replace(matchedStr, '');
-                    cleanNote = cleanNote.replace(/<[^>]*>/g, ' ').replace(/CALENDAR_CIFALSE/g, '').replace(/BLACK_NULL/g, '').replace(/;;;;/g, ' ').replace(/;;/g, ' ').trim();
-                    
-                    let timeVal = '10:00'; let amtVal = 0;
-                    
-                    let tMatch = cleanNote.match(/(\d{1,2})시\s*(\d{1,2})?분?/);
-                    if(tMatch) {
-                        timeVal = `${tMatch[1].padStart(2,'0')}:${tMatch[2] ? tMatch[2].padStart(2,'0') : '00'}`;
-                        cleanNote = cleanNote.replace(tMatch[0], '');
-                    } else {
-                        let tMatch2 = cleanNote.match(/(\d{2}):(\d{2})/);
-                        if (tMatch2) { timeVal = `${tMatch2[1]}:${tMatch2[2]}`; cleanNote = cleanNote.replace(tMatch2[0], ''); }
-                    }
-                    
-                    let amtMatch = cleanNote.match(/(\d{1,3}(,\d{3})+|\d{4,9})원/);
-                    if (amtMatch) { amtVal = parseInt(amtMatch[1].replace(/,/g,'')); cleanNote = cleanNote.replace(amtMatch[0], ''); }
-
-                    cleanNote = cleanNote.replace(/^[-\s[\]*]+/, '').trim();
-                    currentItem = { id: Date.now() + Math.random(), date: dateFound, time: timeVal, note: cleanNote, amount: amtVal, supplier: "미지정", people: 1 };
-                } else {
-                    if (currentItem) {
-                        let cleanNote = line.replace(/<[^>]*>/g, ' ').replace(/CALENDAR_CIFALSE/g, '').replace(/BLACK_NULL/g, '').replace(/;;;;/g, ' ').replace(/;;/g, ' ').trim();
-                        if(cleanNote) currentItem.note += (currentItem.note ? '\n' : '') + cleanNote;
-                    }
+            } else {
+                // 다른 텍스트 파일은 날짜가 명확한 줄만 안전하게 가져옴.
+                const lines = input.split(/\r?\n/);
+                let seq = 0;
+                for (const raw of lines) {
+                    const line = raw.trim();
+                    const m = line.match(/(20\d{2})[.\/_-](\d{1,2})[.\/_-](\d{1,2})\s*(.*)/);
+                    if (!m) continue;
+                    const date = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+                    let note = m[4].trim(), time = '';
+                    const tm = note.match(/(\d{1,2})시(?:\s*(\d{1,2})분)?/);
+                    if (tm) { time = `${String(parseInt(tm[1],10)).padStart(2,'0')}:${String(parseInt(tm[2]||'0',10)).padStart(2,'0')}`; note = note.replace(tm[0],'').trim(); }
+                    if(note) tempItems.push({id:makeId(date,seq++),date,time,note,amount:0,supplier:'',people:'',departure:'',arrival:''});
                 }
             }
-            if (currentItem && currentItem.note.trim()) tempItems.push(currentItem);
 
-            if (tempItems.length === 0 && input.length > 0) {
-                let fallbackNote = input.replace(/<[^>]*>/g, ' ').replace(/CALENDAR_CIFALSE/g, '').replace(/BLACK_NULL/g, '').replace(/;;;;/g, ' ').replace(/;;/g, ' ').substring(0, 3000);
-                tempItems.push({
-                    id: Date.now().toString(),
-                    date: getLocalToday(),
-                    time: '12:00',
-                    note: "[🚨자동 날짜인식 실패 - 원본 텍스트 임시 복구]\n\n" + fallbackNote,
-                    amount: 0, supplier: '미지정', people: 1
-                });
+            if (tempItems.length === 0) {
+                previewDiv.innerHTML = '<p class="text-red-500 p-3 text-center text-[15px] font-bold">간단달력 일정을 찾지 못했습니다. 원본 데이터는 저장하지 않았습니다.</p>';
+                btnsDiv.classList.add('hidden');
+                return;
             }
-
-            previewDiv.innerHTML = tempItems.map(it => `<div class="p-4 bg-sub rounded-xl text-[14px] flex flex-col mb-3 border border-custom"><div class="flex justify-between items-center mb-1.5 font-bold"><span style="color: var(--brand-color)">${it.date} ${smartTimeFormat(it.time)}</span>${it.amount !== 0 ? `<span class="text-orange-500">${formatKRW(it.amount)}원</span>`:''}</div><div class="text-important whitespace-pre-wrap leading-relaxed">${it.note || '내용 없음'}</div></div>`).join('');
-            btnsDiv.classList.remove('hidden'); 
-            showToast(`${tempItems.length}개의 데이터를 추출했습니다.`);
+            previewDiv.innerHTML = tempItems.map(it => `<div class="p-4 bg-sub rounded-xl text-[14px] flex flex-col mb-3 border border-custom"><div class="font-bold mb-1.5" style="color:var(--brand-color)">${it.date} ${smartTimeFormat(it.time)}</div><div class="text-important whitespace-pre-wrap leading-relaxed">${it.note}</div></div>`).join('');
+            btnsDiv.classList.remove('hidden');
+            showToast(`${tempItems.length}개의 간단달력 일정을 정확히 분리했습니다.`);
         };
 
-        window.saveImported = () => { db = [...db, ...tempItems]; sync(); document.getElementById('import-modal').remove(); showToast(`✅ 성공적으로 복원되었습니다!`); navTo('list'); };
+        window.saveImported = () => { const existing = new Set(db.map(x => `${x.date}|${x.time||''}|${x.note||''}`)); const fresh = tempItems.filter(x => !existing.has(`${x.date}|${x.time||''}|${x.note||''}`)); db = [...db, ...fresh]; sync(); document.getElementById('import-modal').remove(); showToast(`✅ ${fresh.length}개 복원 완료${fresh.length < tempItems.length ? ` / 중복 ${tempItems.length-fresh.length}개 제외` : ''}`); navTo('list'); };
 
         window.saveDraft = () => {
             const fDateEl = document.getElementById('f-date');
