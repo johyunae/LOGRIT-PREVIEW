@@ -73,7 +73,7 @@
         .date-num { font-size: 16px; font-weight: 800; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin: 2px auto 0; transition: 0.2s; }
         .is-today .date-num { background: var(--brand-color); color: white; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .holiday-text { font-size: 9.5px; font-weight: 800; color: var(--sun-color); text-align: center; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; padding: 0 2px; line-height: 1.1; letter-spacing: -0.05em; }
-        .memo-strip { font-size: 11.5px; padding: 2px 4px; color: var(--text-main); white-space: nowrap; overflow: hidden; font-weight: 600; letter-spacing: -0.05em; }
+        .memo-strip { font-size: 11.5px; padding: 2px 4px; color: var(--text-main); white-space: nowrap; overflow: hidden; font-weight: 600; letter-spacing: -0.05em; border-radius: 4px; margin-bottom: 1px; }
         .sun { color: var(--sun-color) !important; } .sat { color: var(--sat-color) !important; }
 
         .input-field { width: 100%; background-color: var(--input-bg); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 16px; color: var(--text-bold); outline: none; font-size: 16px; font-weight: bold; transition: border-color 0.2s; }
@@ -250,7 +250,7 @@
                 }
             }
             return `
-                <div onclick="openEntryModal('${item.id}')" class="bg-card p-5 rounded-[1.5rem] mb-3 border border-custom shadow-md text-left active:opacity-60 transition-all cursor-pointer">
+                <div onclick="openEntryModal('${item.id}')" class="bg-card p-5 rounded-[1.5rem] mb-3 border border-custom shadow-md text-left active:opacity-60 transition-all cursor-pointer" style="${item.color ? `border-left:6px solid ${item.color}` : ''}">
                     <div class="flex justify-between items-center border-b border-custom pb-3 mb-3">
                         <span class="font-extrabold text-[18px] uppercase tracking-wide" style="color: var(--brand-color)">${showDate ? item.date+' ' : ''}${smartTimeFormat(item.time)}</span>
                         <i data-lucide="chevron-right" class="w-5 h-5 text-dim opacity-60"></i>
@@ -298,7 +298,7 @@
                     const holHtml = holName ? `<div class="holiday-text">${holName}</div>` : '';
                     gridHtml += `<div onclick="handleDateTouch('${dStr}');" class="memo-cell ${isT?'is-today':''} ${selectedDate===dStr?'is-selected':''}">
                         <div class="flex flex-col items-center justify-start shrink-0 w-full min-h-[36px]"><div class="date-num ${dCls}">${d}</div>${holHtml}</div>
-                        <div class="flex-1 overflow-hidden px-0.5 mt-0.5">${items.map(it => `<div class="memo-strip">${smartTimeFormat(it.time)} ${cleanText(it.supplier, it.note.substring(0,5))}</div>`).join('')}</div>
+                        <div class="flex-1 overflow-hidden px-0.5 mt-0.5">${items.map(it => `<div class="memo-strip" style="${it.color ? `background:${it.color};color:white;` : ''}">${smartTimeFormat(it.time)} ${cleanText(it.supplier, it.note.substring(0,5))}</div>`).join('')}</div>
                     </div>`;
                 }
                 
@@ -656,7 +656,8 @@
                 people: document.getElementById('f-people')?.value || '',
                 supplier: document.getElementById('f-supplier')?.value || '',
                 amount: document.getElementById('f-amount-display')?.value || '',
-                note: document.getElementById('f-note')?.value || ''
+                note: document.getElementById('f-note')?.value || '',
+                color: document.getElementById('f-color')?.value || ''
             };
             localStorage.setItem('preview_logrit_draft_data', JSON.stringify(draft));
         };
@@ -669,6 +670,15 @@
             departure.value = arrival.value;
             arrival.value = temp;
             window.saveDraft();
+        };
+
+        window.selectRecordColor = (color, save = true) => {
+            const el = document.getElementById('f-color'); if(el) el.value = color || '';
+            document.querySelectorAll('.record-color-btn').forEach(b => {
+                b.style.outline = b.dataset.color === (color || '') ? '3px solid var(--text-bold)' : 'none';
+                b.style.outlineOffset = '2px';
+            });
+            if(save) window.saveDraft();
         };
 
         window.closeEntryModal = () => {
@@ -713,6 +723,12 @@
                         </div>
                         
                         <textarea id="f-note" placeholder="상세 메모 Note" class="input-field h-36 p-5 leading-relaxed text-[16px]" onfocus="setTimeout(() => this.scrollIntoView({behavior:'smooth', block:'center'}), 250)"></textarea>
+                        <div class="flex items-center gap-2 px-1 pt-1">
+                            <span class="text-[12px] font-bold text-dim mr-1">일정 색상</span>
+                            <button type="button" data-color="#ef4444" onclick="window.selectRecordColor('#ef4444')" class="record-color-btn w-7 h-7 rounded-full border-2 border-transparent active:scale-90" style="background:#ef4444"></button><button type="button" data-color="#f97316" onclick="window.selectRecordColor('#f97316')" class="record-color-btn w-7 h-7 rounded-full border-2 border-transparent active:scale-90" style="background:#f97316"></button><button type="button" data-color="#eab308" onclick="window.selectRecordColor('#eab308')" class="record-color-btn w-7 h-7 rounded-full border-2 border-transparent active:scale-90" style="background:#eab308"></button><button type="button" data-color="#22c55e" onclick="window.selectRecordColor('#22c55e')" class="record-color-btn w-7 h-7 rounded-full border-2 border-transparent active:scale-90" style="background:#22c55e"></button><button type="button" data-color="#3b82f6" onclick="window.selectRecordColor('#3b82f6')" class="record-color-btn w-7 h-7 rounded-full border-2 border-transparent active:scale-90" style="background:#3b82f6"></button><button type="button" data-color="#8b5cf6" onclick="window.selectRecordColor('#8b5cf6')" class="record-color-btn w-7 h-7 rounded-full border-2 border-transparent active:scale-90" style="background:#8b5cf6"></button><button type="button" data-color="#ec4899" onclick="window.selectRecordColor('#ec4899')" class="record-color-btn w-7 h-7 rounded-full border-2 border-transparent active:scale-90" style="background:#ec4899"></button>
+                            <button type="button" data-color="" onclick="window.selectRecordColor('')" class="record-color-btn w-7 h-7 rounded-full border-2 border-custom bg-sub text-[11px] font-bold text-dim">×</button>
+                            <input type="hidden" id="f-color">
+                        </div>
                     </div>
                     <div id="form-actions" class="flex gap-3 mt-8">
                         ${id ? `<button type="button" onclick="window.deleteItemDirect('${id}')" id="delete-btn" class="flex-1 btn-del py-4.5 rounded-2xl font-bold text-center text-[15px]">삭제 Del</button>` : ''}
@@ -724,6 +740,9 @@
             document.body.insertAdjacentHTML('beforeend', html); 
             
             document.getElementById('f-date').value = defaultDate;
+            const initialColor = draftData ? (draftData.color || '') : (it ? (it.color || '') : '');
+            document.getElementById('f-color').value = initialColor;
+            window.selectRecordColor(initialColor, false);
             document.getElementById('f-departure').value = draftData ? draftData.departure : (it ? it.departure || '' : '');
             document.getElementById('f-arrival').value = draftData ? draftData.arrival : (it ? it.arrival || '' : '');
             document.getElementById('f-time').value = draftData ? draftData.time : (it ? it.time || '' : '');
