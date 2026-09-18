@@ -522,7 +522,8 @@
                         </button>
                     </div>
                     <input type="file" id="backup-file-input" accept=".srt,.txt" class="hidden" onchange="handleFileUpload(event)">
-                    <textarea id="import-input" class="input-field h-36 p-4 text-[15px] mb-5 text-important hidden" placeholder=""></textarea>
+                    <textarea id="import-input" class="input-field h-36 p-4 text-[15px] mb-3 text-important hidden" placeholder=""></textarea>
+                    <div class="flex items-center gap-2 mb-4"><span class="text-[13px] font-bold text-dim whitespace-nowrap">복원 시작년도</span><input type="number" id="import-start-year" value="2024" min="1900" max="2100" class="input-field !py-2 !px-3 text-[14px]" onchange="if(document.getElementById('import-input').value) processImport()"><span class="text-[12px] text-dim whitespace-nowrap">년부터</span></div>
                     
                     <div id="import-preview" class="max-h-64 overflow-y-auto space-y-2 mb-5 text-important"></div>
                     <div id="import-btns" class="hidden">
@@ -570,6 +571,7 @@
             if(!input.trim()) { previewDiv.innerHTML = '<p class="text-red-500 p-2 text-center text-[15px] font-bold">내용이 비어있습니다.</p>'; btnsDiv.classList.add('hidden'); return; }
 
             tempItems = [];
+            const startYear = parseInt(document.getElementById('import-start-year')?.value || '1900', 10);
             const cleanField = v => (!v || v === 'BLACK_NULL') ? '' : String(v).trim();
             const makeId = (date, idx) => 'ci_' + date.replace(/-/g,'') + '_' + idx + '_' + Date.now();
 
@@ -584,6 +586,7 @@
                     const key = group.slice(0, sep).trim();
                     const dm = key.match(/^(\d{4})_(\d{1,2})_(\d{1,2})$/);
                     if (!dm) continue;
+                    if (parseInt(dm[1], 10) < startYear) continue;
                     const date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
                     const records = group.slice(sep + 3).split(/\t+/).map(x => x.trim()).filter(Boolean);
 
@@ -605,7 +608,7 @@
                         if (category) noteParts.push('[' + category + ']');
                         if (timePlace) noteParts.push(timePlace);
                         if (memo) noteParts.push(memo);
-                        const note = noteParts.join(' ').replace(/\\n|\\r\\n|\\r/g, ' ').replace(/\s+/g, ' ').trim();
+                        const note = noteParts.join(' ').replace(/\\\\n|\\\\r\\\\n|\\\\r|\\n|\\r\\n|\\r/g, ' ').replace(/\s+/g, ' ').trim();
                         if (!note) continue;
 
                         tempItems.push({
@@ -623,6 +626,7 @@
                     const line = raw.trim();
                     const m = line.match(/(20\d{2})[.\/_-](\d{1,2})[.\/_-](\d{1,2})\s*(.*)/);
                     if (!m) continue;
+                    if (parseInt(m[1], 10) < startYear) continue;
                     const date = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
                     let note = m[4].trim(), time = '';
                     const tm = note.match(/(\d{1,2})시(?:\s*(\d{1,2})분)?/);
