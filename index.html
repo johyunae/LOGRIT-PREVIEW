@@ -294,7 +294,7 @@
                         <div class="sticky-sub px-5 py-5 shadow-sm">
                             <div class="flex items-baseline gap-2 mb-1">
                                 <h2 class="text-3xl font-black text-important">${y}.${m+1}</h2>
-                                <span class="text-sm font-medium text-dim opacity-50 tracking-wide">${monthNamesEn[m]}</span>
+                                <span class="text-lg font-medium italic text-dim opacity-60 tracking-wide" style="font-family: Georgia, serif;">${monthNamesEn[m]}</span>
                             </div>
                             <div class="grid grid-cols-7 text-center text-[12px] font-extrabold text-dim mt-4"><div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div></div>
                         </div>
@@ -315,7 +315,7 @@
                         <div class="sticky-sub px-5 py-5 border-b border-custom shadow-sm bg-primary">
                             <div class="flex items-center justify-between mb-3">
                                 <button onclick="moveMonth(-1)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-sub active:scale-90 transition-transform cursor-pointer" aria-label="이전 달"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-                                <div class="text-center"><div class="text-xl font-black text-important">${calContext.getFullYear()}.${calContext.getMonth()+1}</div><div class="text-xs font-medium text-dim opacity-60">${monthNamesEn[calContext.getMonth()]}</div></div>
+                                <div class="text-center"><div class="text-xl font-black text-important">${calContext.getFullYear()}.${calContext.getMonth()+1}</div><div class="text-lg font-medium italic text-dim opacity-60 tracking-wide" style="font-family: Georgia, serif;">${monthNamesEn[calContext.getMonth()]}</div></div>
                                 <button onclick="moveMonth(1)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-sub active:scale-90 transition-transform cursor-pointer" aria-label="다음 달"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
                             </div>
                             <h2 class="text-3xl font-black ${total < 0 ? 'text-red-400' : ''}" style="${total >= 0 ? 'color: var(--brand-color)' : ''}">${formatKRW(total)}원</h2>
