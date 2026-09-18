@@ -1,11 +1,19 @@
 {
+  "id": "/LOGRIT-PREVIEW/",
   "name": "로그릿 Preview",
-  "short_name": "로그릿",
-  "description": "매출장부와 스케줄을 하나로 합친 효율적인 관리 프로그램",
+  "short_name": "로그릿 Preview",
+  "description": "로그릿 테스트 및 개발 프리뷰",
   "start_url": "/LOGRIT-PREVIEW/",
   "scope": "/LOGRIT-PREVIEW/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#6366f1",
-  "icons": [{"src":"icon.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
