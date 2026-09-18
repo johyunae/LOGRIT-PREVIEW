@@ -538,21 +538,28 @@
             const file = e.target.files[0];
             if (!file) return;
             showToast("파일을 분석 중입니다...");
-            
-            const tryRead = (encoding) => {
-                const reader = new FileReader();
-                reader.onload = (evt) => { 
-                    let text = evt.target.result;
-                    if (encoding === 'UTF-8' && (text.includes('') || text.includes('웱'))) {
-                        tryRead('euc-kr');
-                        return;
-                    }
-                    document.getElementById('import-input').value = text; 
-                    window.processImport(); 
-                };
-                reader.readAsText(file, encoding);
+
+            const bytesToText = async () => {
+                const buf = await file.arrayBuffer();
+                const bytes = new Uint8Array(buf);
+                const decoders = [
+                    ['UTF-8', new TextDecoder('utf-8', {fatal:false})],
+                    ['EUC-KR', new TextDecoder('euc-kr', {fatal:false})]
+                ];
+                let best = '', bestScore = -Infinity, bestName = '';
+                for (const [name, decoder] of decoders) {
+                    const text = decoder.decode(bytes);
+                    const bad = (text.match(/�/g) || []).length;
+                    const korean = (text.match(/[가-힣]/g) || []).length;
+                    const markers = (text.match(/KIND_MEMO|CALENDAR_CIFALSE|>>>|;:/g) || []).length;
+                    const score = korean * 4 + markers * 20 - bad * 100;
+                    if (score > bestScore) { best = text; bestScore = score; bestName = name; }
+                }
+                document.getElementById('import-input').value = best;
+                window.processImport();
+                if (bestName === 'EUC-KR') showToast("한글 인코딩(EUC-KR)으로 읽었습니다.");
             };
-            tryRead('UTF-8');
+            bytesToText().catch(() => showToast("파일을 읽지 못했습니다."));
         };
 
         let tempItems = [];
@@ -568,8 +575,8 @@
 
             // 간단달력(CALENDAR_CIFALSE) 전용 백업 형식:
             // 날짜 묶음은 <><YYYY_M_D>>> 로 시작하고, 같은 날 여러 일정은 탭으로 구분됨.
-            if (input.includes('CALENDAR_CIFALSE') && input.includes('>>>')) {
-                const groups = input.split('<><').filter(x => /^\d{4}_\d{1,2}_\d{1,2}>>>/.test(x));
+            if (input.includes('KIND_MEMO') && input.includes('>>>')) {
+                const groups = input.split(/(?:<><)?(?=\d{4}_\d{1,2}_\d{1,2}>>>)/).filter(x => /^\d{4}_\d{1,2}_\d{1,2}>>>/.test(x.trim()));
                 let seq = 0;
                 for (const group of groups) {
                     const sep = group.indexOf('>>>');
