@@ -257,7 +257,7 @@
             const listContainer = document.getElementById('record-list-content');
             if (listContainer) {
                 let filtered = filterMonth ? db.filter(x => x.date.startsWith(filterMonth)) : db;
-                filtered = filtered.filter(it => (it.note||'').toLowerCase().includes(searchTerm) || (it.supplier||'').toLowerCase().includes(searchTerm));
+                filtered = filtered.filter(it => (it.note||'').toLowerCase().includes(searchTerm) || (it.supplier||'').toLowerCase().includes(searchTerm) || (it.departure||'').toLowerCase().includes(searchTerm) || (it.arrival||'').toLowerCase().includes(searchTerm));
                 filtered = sortMaster(filtered);
                 let runningTotal = 0;
                 listContainer.innerHTML = filtered.map(x => { runningTotal += Number(x.amount || 0); return renderItemCard(x, true, runningTotal, true); }).join('') || `<p class="text-center py-24 opacity-50 font-bold text-[15px] text-dim">기록이 없습니다.</p>`;
