@@ -218,6 +218,8 @@
             if (mm === '01' && dd === '01') return '신정'; if (mm === '03' && dd === '01') return '삼일절'; if (mm === '05' && dd === '05') return '어린이날'; if (mm === '06' && dd === '06') return '현충일'; if (mm === '07' && dd === '17') return '제헌절'; if (mm === '08' && dd === '15') return '광복절'; if (mm === '10' && dd === '03') return '개천절'; if (mm === '10' && dd === '09') return '한글날'; if (mm === '12' && dd === '25') return '성탄절';
             const f = Math.floor, G = y % 19, C = f(y / 100); const H = (C - f(C / 4) - f((8 * C + 13) / 25) + 19 * G + 15) % 30; const I = H - f(H / 28) * (1 - f(29 / (H + 1)) * f((21 - G) / 11)); const J = (y + f(y / 4) + I + 2 - C + f(C / 4)) % 7; const L = I - J, eMonth = 3 + f((L + 40) / 44), eDay = L + 28 - 31 * f(eMonth / 4);
             if (m === eMonth && d === eDay) return '부활절';
+            const july1 = new Date(y, 6, 1); const firstSundayJuly = 1 + ((7 - july1.getDay()) % 7);
+            if (m === 7 && d === firstSundayJuly) return '맥추감사절';
             let nov1 = new Date(y, 10, 1); let offset = nov1.getDay() === 0 ? 0 : 7 - nov1.getDay(); let thanksDay = 1 + offset + 14;
             if (m === 11 && d === thanksDay) return '추수감사';
             if (lunarHolidays[dStr]) return lunarHolidays[dStr];
