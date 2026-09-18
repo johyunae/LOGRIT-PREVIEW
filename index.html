@@ -605,7 +605,7 @@
                         if (category) noteParts.push('[' + category + ']');
                         if (timePlace) noteParts.push(timePlace);
                         if (memo) noteParts.push(memo);
-                        const note = noteParts.join(' ').replace(/\s+/g, ' ').trim();
+                        const note = noteParts.join(' ').replace(/\\n|\\r\\n|\\r/g, ' ').replace(/\s+/g, ' ').trim();
                         if (!note) continue;
 
                         tempItems.push({
