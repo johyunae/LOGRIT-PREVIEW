@@ -712,7 +712,7 @@
                             <span class="absolute right-5 top-1/2 -translate-y-1/2 opacity-60 font-bold text-[16px] text-dim">원</span>
                         </div>
                         
-                        <textarea id="f-note" placeholder="상세 메모 Note" class="input-field h-36 p-5 leading-relaxed text-[16px]"></textarea>
+                        <textarea id="f-note" placeholder="상세 메모 Note" class="input-field h-36 p-5 leading-relaxed text-[16px]" onfocus="setTimeout(() => this.scrollIntoView({behavior:'smooth', block:'center'}), 250)"></textarea>
                     </div>
                     <div id="form-actions" class="flex gap-3 mt-8">
                         ${id ? `<button type="button" onclick="window.deleteItemDirect('${id}')" id="delete-btn" class="flex-1 btn-del py-4.5 rounded-2xl font-bold text-center text-[15px]">삭제 Del</button>` : ''}
