@@ -122,10 +122,12 @@
     <div id="toast">알림</div>
 
     <script>
-        // 악성 서비스워커(캐시) 완벽 삭제 및 무한 로딩 원천 차단
+        // PREVIEW 경로의 서비스워커만 정리하고 /LOGRIT/ 서비스워커는 유지
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let r of registrations) { r.unregister(); }
+                for (const r of registrations) {
+                    if (new URL(r.scope).pathname.startsWith('/LOGRIT-PREVIEW/')) r.unregister();
+                }
             });
         }
 
