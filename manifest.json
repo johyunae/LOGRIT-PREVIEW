@@ -1,8 +1,8 @@
 {
   "id": "/LOGRIT-PREVIEW/",
-  "name": "로그릿 Preview",
-  "short_name": "로그릿 Preview",
-  "description": "로그릿 테스트 및 개발 프리뷰",
+  "name": "로그릿 AI",
+  "short_name": "로그릿 AI",
+  "description": "로그릿 AI 일정 관리 개발용 앱",
   "start_url": "/LOGRIT-PREVIEW/",
   "scope": "/LOGRIT-PREVIEW/",
   "display": "standalone",
