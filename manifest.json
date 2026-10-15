@@ -10,16 +10,10 @@
   "theme_color": "#6366f1",
   "icons": [
     {
-      "src": "/LOGRIT/icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "icon-ai.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/LOGRIT/icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }
