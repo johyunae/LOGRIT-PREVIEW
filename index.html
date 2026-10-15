@@ -121,6 +121,7 @@
     <button onclick="openEntryModal()" class="fixed right-5 bottom-24 w-16 h-16 bg-brand rounded-3xl shadow-[0_10px_25px_rgba(99,102,241,0.4)] flex items-center justify-center z-[60] active:scale-90 transition-transform cursor-pointer"><i data-lucide="plus" class="w-8 h-8 text-white"></i></button>
     <div id="toast">알림</div>
 
+    <script src="ai-import.js"></script>
     <script>
         // PREVIEW 경로의 서비스워커만 정리하고 /LOGRIT/ 서비스워커는 유지
         if ('serviceWorker' in navigator) {
@@ -158,6 +159,7 @@
                 render(); 
                 if (window.lucide) lucide.createIcons(); 
                 
+                if (window.receiveAIRecord()) return;
                 // 임시저장 내용 띄우기
                 const draftStr = localStorage.getItem('preview_logrit_draft_data');
                 if (draftStr) {
@@ -760,6 +762,38 @@
 
             if (window.lucide) lucide.createIcons();
         };
+
+        window.receiveAIRecord = () => {
+            if (!location.hash.startsWith('#ai-record=')) return false;
+            const payload = location.hash.slice('#ai-record='.length);
+            // Clear sensitive payload before rendering or showing validation errors.
+            history.replaceState(null, '', location.pathname + location.search);
+            try {
+                if (payload.length > 40000) throw new Error('일정 내용이 너무 깁니다.');
+                const record = LogritAIImport.validateRecord(JSON.parse(decodeURIComponent(payload)));
+                const draft = localStorage.getItem('preview_logrit_draft_data');
+                if (draft && JSON.parse(draft).isOpen) {
+                    alert('작성 중인 일정이 있습니다. 먼저 저장하거나 닫은 뒤 연결 링크를 다시 열어주세요.');
+                    return false;
+                }
+                if (db.some(it => it.date === record.date && (it.time || '') === record.time && (it.departure || '') === record.departure && (it.arrival || '') === record.arrival && (it.note || '') === record.note)) {
+                    showToast('이미 같은 일정이 있습니다. 기록에서 확인해주세요.');
+                    return true;
+                }
+                document.getElementById('modal-container')?.remove();
+                openEntryModal(null, record.date, record);
+                const title = document.querySelector('#modal-container h3');
+                if (title) title.textContent = 'AI 배차 확인';
+                document.querySelector('#modal-container h3 + span').textContent = '확인 후 저장';
+                document.querySelector('#modal-container .text-indigo-400')?.remove();
+                showToast('AI가 정리한 배차입니다. 확인 후 저장해주세요.');
+                return true;
+            } catch (error) {
+                alert(error.message || 'AI 일정을 열지 못했습니다.');
+                return false;
+            }
+        };
+        window.addEventListener('hashchange', () => window.receiveAIRecord());
 
         window.startCopy = () => { currentEditId = null; document.getElementById('delete-btn')?.remove(); event.currentTarget.remove(); localStorage.removeItem('preview_logrit_draft_data'); showToast("복사 완료! 다른 날짜에 저장하세요."); };
         window.saveRecord = (e) => { 
